@@ -6,13 +6,16 @@
 package main
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"flag"
 	"io"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -23,6 +26,16 @@ import (
 var handlerChan = make(chan int)
 
 var logFile = flag.String("log-file", "", "Path to log file.")
+var certificatePin = flag.String("certificate-pin", "", "SHA2-256 pin of the server certificate, encoded in hex.")
+var publicKeyPin = flag.String("public-key-pin", "", "SHA2-256 pin of the server public key, encoded in hex.")
+
+func matched(b bool) string {
+	if b {
+		return "matched pinned value"
+	} else {
+		return "didn't match pinned value"
+	}
+}
 
 func copyLoop(stream quic.Stream, or net.Conn) {
 	var wg sync.WaitGroup
@@ -49,8 +62,15 @@ func handleClient(connection *pt.SocksConn) {
 		log.Printf("Ending connection to %s", connection.Req.Target)
 	}()
 
+	tlsConfig := &tls.Config{
+		// Note that we allow an insecure connection to be established, such
+		// that we can inspect the certificate from the server and terminate
+		// the connection if it doesn't match our pin.
+		InsecureSkipVerify: true,
+	}
+
 	log.Printf("Connecting to %s", connection.Req.Target)
-	session, err := quic.DialAddr(connection.Req.Target, &tls.Config{InsecureSkipVerify: true}, nil)
+	session, err := quic.DialAddr(connection.Req.Target, tlsConfig, nil)
 
 	if err != nil {
 		log.Printf("Unable to connect to Quic server: %s", err)
@@ -60,6 +80,49 @@ func handleClient(connection *pt.SocksConn) {
 
 	log.Printf("Connected to %s", connection.Req.Target)
 	defer session.Close(nil)
+
+	// Do SHA2-256 key pin check here.
+	pinValid := true
+	state := session.ConnectionState()
+
+	for _, peerCertificate := range state.PeerCertificates {
+		// Do public key pinning:
+		publicKeyHash := sha256.New()
+		publicKeyHash.Write(peerCertificate.RawSubjectPublicKeyInfo)
+		publicKeyHashHex := hex.EncodeToString(publicKeyHash.Sum(nil))
+
+		// Do certificate pinning:
+		certificateHash := sha256.New()
+		certificateHash.Write(peerCertificate.Raw)
+		certificateHashHex := hex.EncodeToString(certificateHash.Sum(nil))
+
+		// Do pin check.
+		publicKeyPinValid := true
+
+		if *publicKeyPin != "" {
+			if strings.ToLower(*publicKeyPin) != strings.ToLower(publicKeyHashHex) {
+				publicKeyPinValid = false
+			}
+			log.Printf("  Public key:  '%s' %s (SHA2-256)", publicKeyHashHex, matched(publicKeyPinValid))
+		}
+
+		certificatePinValid := true
+
+		if *certificatePin != "" {
+			if strings.ToLower(*certificatePin) != strings.ToLower(certificateHashHex) {
+				certificatePinValid = false
+			}
+
+			log.Printf("  Certificate: '%s' %s (SHA2-256)", certificateHashHex, matched(certificatePinValid))
+		}
+
+		pinValid = publicKeyPinValid && certificatePinValid
+
+		if !pinValid {
+			log.Printf("TLS certificate and/or public key did not match pinned values.")
+			return
+		}
+	}
 
 	stream, err := session.OpenStreamSync()
 
@@ -113,6 +176,10 @@ func main() {
 
 		log.SetOutput(file)
 		defer file.Close()
+	}
+
+	if *publicKeyPin == "" && *certificatePin == "" {
+		log.Fatalf("Certificate and/or public key pin missing.")
 	}
 
 	clientInfo, err := pt.ClientSetup(nil)
