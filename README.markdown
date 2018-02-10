@@ -30,8 +30,8 @@ values. These values should be published by the server operator.
 
 ### Public Test Server
 
-You can use the public test server running as a virtual machine at
-DigitalOcean. **DO NOT** do this unless you know what you are doing.
+You can use the public test server running on a virtual machine hosted
+by Digital Ocean. **DO NOT** do this unless you know what you are doing.
 
 Set the following options in your `torrc`:
 
