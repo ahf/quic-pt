@@ -28,6 +28,18 @@ should set the following options in your `torrc`:
 See below on how to find the public key and certificate fingerprint
 values. These values should be published by the server operator.
 
+### Public Test Server
+
+You can use the public test server running as a virtual machine at
+DigitalOcean. **DO NOT** do this unless you know what you are doing.
+
+Set the following options in your `torrc`:
+
+    UseBridges 1
+    Bridge quic 188.166.70.190:31337
+
+    ClientTransportPlugin quic exec path/to/quic-client -log-file quic-client.log -certificate-pin 13dc049bf4d33a0562d47f8dc5c9940897a3d3698ed1dcf619d04031b9a4d97e -public-key-pin 4dabf20a1c21d9f83152d1c59cdcbb905c0ad4bad993a380f30b653eb49c8d3e
+
 ## Building `quic-server`
 
 To build the `quic-server`:
