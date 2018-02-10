@@ -1,2 +1,2 @@
-quic-client/quic-client
-quic-server/quic-server
+src/quic-client/quic-client
+src/quic-server/quic-server
