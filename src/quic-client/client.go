@@ -118,12 +118,11 @@ func main() {
 	clientInfo, err := pt.ClientSetup(nil)
 
 	if err != nil {
-		os.Exit(1)
+		log.Fatalf("Unable to setup PT Client")
 	}
 
 	if clientInfo.ProxyURL != nil {
-		pt.ProxyError("proxy unsupported")
-		os.Exit(1)
+		log.Fatalf("Proxy unsupported")
 	}
 
 	listeners := make([]net.Listener, 0)
