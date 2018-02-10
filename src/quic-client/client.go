@@ -37,6 +37,12 @@ func matched(b bool) string {
 	}
 }
 
+func hash_hex(b []byte) string {
+	h := sha256.New()
+	h.Write(b)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func copyLoop(stream quic.Stream, or net.Conn) {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -87,14 +93,10 @@ func handleClient(connection *pt.SocksConn) {
 
 	for _, peerCertificate := range state.PeerCertificates {
 		// Do public key pinning:
-		publicKeyHash := sha256.New()
-		publicKeyHash.Write(peerCertificate.RawSubjectPublicKeyInfo)
-		publicKeyHashHex := hex.EncodeToString(publicKeyHash.Sum(nil))
+		publicKeyHashHex := hash_hex(peerCertificate.RawSubjectPublicKeyInfo)
 
 		// Do certificate pinning:
-		certificateHash := sha256.New()
-		certificateHash.Write(peerCertificate.Raw)
-		certificateHashHex := hex.EncodeToString(certificateHash.Sum(nil))
+		certificateHashHex := hash_hex(peerCertificate.Raw)
 
 		// Do pin check.
 		publicKeyPinValid := true
