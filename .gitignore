@@ -1,3 +1,4 @@
+*.log
 cert.pem
 key.pem
 src/quic-client/quic-client

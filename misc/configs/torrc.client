@@ -7,4 +7,4 @@ SocksPort 19050
 UseBridges 1
 Bridge quic 127.0.0.1:31337
 
-ClientTransportPlugin quic exec src/quic-client/quic-client
+ClientTransportPlugin quic exec src/quic-client/quic-client -log-file quic-client.log

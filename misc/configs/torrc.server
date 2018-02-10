@@ -7,5 +7,5 @@ BridgeRelay 1
 ORPort 9001
 ExtORPort 9002
 
-ServerTransportPlugin quic exec src/quic-server/quic-server -certificate cert.pem -key key.pem
+ServerTransportPlugin quic exec src/quic-server/quic-server -log-file quic-server.log -certificate cert.pem -key key.pem
 ServerTransportListenAddr quic 127.0.0.1:31337

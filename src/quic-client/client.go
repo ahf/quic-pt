@@ -7,7 +7,9 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"io"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -19,6 +21,8 @@ import (
 )
 
 var handlerChan = make(chan int)
+
+var logFile = flag.String("log-file", "", "Path to log file.")
 
 func copyLoop(stream quic.Stream, or net.Conn) {
 	var wg sync.WaitGroup
@@ -41,28 +45,39 @@ func handleClient(connection *pt.SocksConn) {
 	handlerChan <- 1
 	defer func() {
 		handlerChan <- -1
+		connection.Close()
+		log.Printf("Ending connection to %s", connection.Req.Target)
 	}()
 
-	defer connection.Close()
-
+	log.Printf("Connecting to %s", connection.Req.Target)
 	session, err := quic.DialAddr(connection.Req.Target, &tls.Config{InsecureSkipVerify: true}, nil)
 
 	if err != nil {
+		log.Printf("Unable to connect to Quic server: %s", err)
 		connection.Reject()
 		return
 	}
 
+	log.Printf("Connected to %s", connection.Req.Target)
 	defer session.Close(nil)
 
 	stream, err := session.OpenStreamSync()
 
 	if err != nil {
+		log.Printf("Unable to create Quic stream: %s", err)
 		connection.Reject()
 		return
 	}
 
-	err = connection.Grant(session.RemoteAddr().(*net.TCPAddr))
+	// FIXME(ahf): Figure out why Grant() takes an net.TCPAddr, but ignores it?
+	err = connection.Grant(nil)
 
+	if err != nil {
+		log.Printf("Unable to grant session with %s", session.RemoteAddr())
+		return
+	}
+
+	log.Printf("Granting session with %s", session.RemoteAddr())
 	copyLoop(stream, connection)
 }
 
@@ -87,6 +102,19 @@ func acceptLoop(listener *pt.SocksListener) {
 }
 
 func main() {
+	flag.Parse()
+
+	if *logFile != "" {
+		file, err := os.OpenFile(*logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+
+		if err != nil {
+			log.Fatalf("Unable to open log file: %s", err)
+		}
+
+		log.SetOutput(file)
+		defer file.Close()
+	}
+
 	clientInfo, err := pt.ClientSetup(nil)
 
 	if err != nil {
