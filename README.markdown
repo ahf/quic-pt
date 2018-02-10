@@ -3,7 +3,19 @@
 This is an experimental Pluggable Transport (PT)  to experiment with the
 Quic protocol and Tor.
 
-## Client Configuration
+## Building `quic-client`
+
+To build the `quic-client`:
+
+    $ git clone https://github.com/ahf/quic-pt.git
+    $ cd quic-pt/src/quic-client
+    $ go get
+    $ go build
+
+You can now copy the `src/quic-client/quic-client` binary to a location
+of your choice.
+
+### Client Configuration
 
 To configure a `tor` client to use the Quic Pluggable Transport you
 should set the following options in your `torrc`:
@@ -16,7 +28,19 @@ should set the following options in your `torrc`:
 See below on how to find the public key and certificate fingerprint
 values. These values should be published by the server operator.
 
-## Server Configuration
+## Building `quic-server`
+
+To build the `quic-server`:
+
+    $ git clone https://github.com/ahf/quic-pt.git
+    $ cd quic-pt/src/quic-server
+    $ go get
+    $ go build
+
+You can now copy the `src/quic-server/quic-server` binary to a location
+of your choice.
+
+### Server Configuration
 
 To configure a `tor` bridge to support the Quic Pluggable Transport you
 should set the following options in your `torrc`:
