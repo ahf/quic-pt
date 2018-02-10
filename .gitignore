@@ -1,2 +1,4 @@
+cert.pem
+key.pem
 src/quic-client/quic-client
 src/quic-server/quic-server
