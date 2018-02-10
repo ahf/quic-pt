@@ -1,0 +1,10 @@
+RunAsDaemon 0
+Log notice stderr
+DataDirectory ~/.tor-quic-client/
+
+SocksPort 19050
+
+UseBridges 1
+Bridge quic 127.0.0.1:31337
+
+ClientTransportPlugin quic exec src/quic-client/quic-client
