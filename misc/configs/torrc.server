@@ -1,0 +1,11 @@
+RunAsDaemon 0
+Log notice stderr
+DataDirectory ~/.tor-quic-server/
+
+PublishServerDescriptor 0
+BridgeRelay 1
+ORPort 9001
+ExtORPort 9002
+
+ServerTransportPlugin quic exec src/quic-server/quic-server -certificate cert.pem -key key.pem
+ServerTransportListenAddr quic 127.0.0.1:31337
