@@ -23,7 +23,7 @@ should set the following options in your `torrc`:
     UseBridges 1
     Bridge quic <Server IP>:<Server Port>
 
-    ClientTransportPlugin quic exec path/to/quic-client path/to/quic-client.log -certificate-pin <certificate fingerprint> -public-key-pin <public key fingerprint>
+    ClientTransportPlugin quic exec path/to/quic-client -log-file path/to/quic-client.log -certificate-pin <certificate fingerprint> -public-key-pin <public key fingerprint>
 
 See below on how to find the public key and certificate fingerprint
 values. These values should be published by the server operator.
