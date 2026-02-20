@@ -70,3 +70,7 @@ To find the certificate fingerprint use:
 ## Authors
 
 - Alexander Færøy (<ahf@torproject.org>)
+
+## Related Projects
+
+- [UAT](https://gitlab.torproject.org/41_un/uat) - An actively developed QUIC-based Pluggable Transport implementation written in Rust.
